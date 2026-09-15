@@ -1,0 +1,13 @@
+# Data generation / loading
+Faker==40.39.0
+pandas==3.0.5
+SQLAlchemy==2.0.53
+psycopg2-binary==2.9.13
+python-dotenv==1.2.3
+
+# Testing
+pytest==9.1.1
+
+# Transformation (dbt)
+dbt-core==1.12.5
+dbt-postgres==1.11.0

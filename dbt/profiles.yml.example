@@ -1,0 +1,25 @@
+# Example dbt profile for this project.
+#
+# Copy this file to "profiles.yml" in this same directory (dbt/profiles.yml)
+# -- it is git-ignored -- and either:
+#   a) point dbt at it explicitly on every command:
+#        dbt run --profiles-dir .
+#   b) or export DBT_PROFILES_DIR=<path to this dbt/ folder>
+#
+# Credentials are read from environment variables so no secret ever needs to
+# be committed. Populate them via a project-root .env file (see
+# .env.example) and your shell/tooling of choice, or docker-compose's env
+# passthrough.
+
+ecommerce_dwh:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      user: "{{ env_var('POSTGRES_USER', 'dwh_user') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'dwh_password') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5432') | int }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'ecommerce_dwh') }}"
+      schema: dbt_dev
+      threads: 4

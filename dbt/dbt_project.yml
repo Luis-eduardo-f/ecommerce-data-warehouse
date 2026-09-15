@@ -1,0 +1,28 @@
+name: 'ecommerce_dwh'
+version: '1.0.0'
+config-version: 2
+
+# This must match a profile name in profiles.yml (see profiles.yml.example
+# at the project root of dbt/).
+profile: 'ecommerce_dwh'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  ecommerce_dwh:
+    staging:
+      +materialized: view
+      +schema: staging
+    marts:
+      +materialized: table
+      +schema: marts
