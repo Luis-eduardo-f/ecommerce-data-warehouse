@@ -1,0 +1,65 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pytest:
+    name: pytest (seed data generation)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        run: pytest -v
+
+  dbt-parse:
+    name: dbt parse (static project validation)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create throwaway dbt profile
+        run: |
+          mkdir -p /tmp/dbt_profiles
+          cp dbt/profiles.yml.example /tmp/dbt_profiles/profiles.yml
+        env:
+          # dbt parse only validates the project (Jinja/YAML/ref graph); it
+          # never opens a database connection, so these are dummy values
+          # purely to satisfy env_var() lookups in profiles.yml.
+          POSTGRES_USER: dwh_user
+          POSTGRES_PASSWORD: dwh_password
+          POSTGRES_DB: ecommerce_dwh
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+
+      - name: dbt parse
+        working-directory: dbt
+        run: dbt parse --profiles-dir /tmp/dbt_profiles
+        env:
+          POSTGRES_USER: dwh_user
+          POSTGRES_PASSWORD: dwh_password
+          POSTGRES_DB: ecommerce_dwh
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"

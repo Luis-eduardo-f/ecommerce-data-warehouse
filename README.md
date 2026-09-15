@@ -1,5 +1,9 @@
 # ecommerce-data-warehouse
 
+![tests](https://github.com/Luis-eduardo-f/ecommerce-data-warehouse/actions/workflows/tests.yml/badge.svg)
+![license](https://img.shields.io/github/license/Luis-eduardo-f/ecommerce-data-warehouse)
+![python](https://img.shields.io/badge/python-3.12%2B-blue)
+
 Data warehouse analítico de e-commerce construído em **Python + dbt + PostgreSQL + Docker**, com dados sintéticos gerados via `Faker`. O projeto simula o fluxo completo de um pipeline de analytics engineering moderno: geração de dados brutos, carga em uma camada `raw` minimamente tipada, e transformação em camadas `staging` → `marts` inteiramente em SQL declarativo com **dbt**, incluindo um star schema, testes de qualidade de dados automatizados e modelos analíticos com window functions.
 
 Este é o segundo projeto de portfólio de engenharia de dados do autor. O primeiro, **crypto-data-pipeline**, usa Python + Apache Airflow para orquestração de extração de dados de mercado; este projeto foca deliberadamente em **transformação declarativa com dbt** — uma habilidade central e muito demandada em vagas de analytics/data engineering que o outro repositório não cobre.
@@ -193,6 +197,37 @@ Testes singulares (SQL customizado) em `dbt/tests/`, para regras de negócio que
 - `assert_revenue_reconciles_with_fact_orders.sql`: garante que a soma de `mart_revenue_by_month` bate com a soma de `fact_orders` (excluindo pedidos cancelados)
 
 Rodar `dbt test` executa toda essa suíte contra o banco e falha o build caso qualquer regra seja violada — o mesmo princípio usado em pipelines de produção para impedir que dados quebrados cheguem às camadas de consumo.
+
+## CI
+
+O workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) roda em todo push/PR para `main` e valida, sem depender de um Postgres real:
+
+- **`pytest`**: a suíte de testes puramente Python da geração de dados sintéticos (30 testes).
+- **`dbt parse`**: valida o grafo do projeto dbt (Jinja, YAML, `ref()`/`source()`) contra um `profiles.yml` descartável gerado a partir de `dbt/profiles.yml.example` — o parse nunca abre conexão com o banco.
+
+## Exemplo
+
+Saída real de `pytest -v` (30 testes, ambiente local, Python 3.12.10):
+
+```text
+tests/test_generate_seed_data.py::test_customers_row_count PASSED        [  3%]
+tests/test_generate_seed_data.py::test_products_row_count PASSED         [  6%]
+...
+tests/test_generate_seed_data.py::test_generate_all_returns_all_tables_consistently PASSED [100%]
+
+============================= 30 passed in 0.86s ==============================
+```
+
+Saída real de `dbt parse --profiles-dir <profiles descartável>` (dentro de `dbt/`):
+
+```text
+23:00:25  Running with dbt=1.12.5
+23:00:25  Registered adapter: postgres=1.11.0
+23:00:26  Unable to do partial parsing because saved manifest not found. Starting full parse.
+23:00:27  Performance info: C:\...\dbt\target\perf_info.json
+```
+
+O `manifest.json` gerado por esse parse confirma o grafo do projeto: **9 models**, **4 sources** e **59 nodes de teste** (genéricos + singulares), todos resolvidos com sucesso sem tocar o banco de dados.
 
 ## Licença
 
